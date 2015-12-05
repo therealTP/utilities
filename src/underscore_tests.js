@@ -1,5 +1,4 @@
 /*jshint eqnull:true, expr:true*/
-console.log('hey');
 var _ = { };
 
 (function() {
@@ -14,10 +13,10 @@ var _ = { };
    */
 
   // Return an array of the first n elements of an array. If n is undefined,
-  // return just the first element.
+  // return just the first element (not in an array)
+  
   _.first = function(array, n) {
 
-    console.log(array, n);
 
     if (!n) {
       return array[0];
@@ -32,7 +31,6 @@ var _ = { };
       holdArr.push(array[i]);
     }
 
-    console.log(holdArr);
     return holdArr;
   };
 
@@ -164,17 +162,90 @@ var _ = { };
   };
 
   // Determine if the array or object contains a given value (using `===`).
-  _.contains = function(collection, target) {
+  // Collection param is either a array or an object, not a 'collection' of objects
+  // Changing parameter name to list
+
+  _.contains = function(list, target) {
+    
+    if (Array.isArray(list) && list.indexOf(target) > -1) {
+      return true;
+    } 
+
+    // if non-array object, loop through keys to see if value is present
+    for (var key in list) {
+      if (list[key] === target) {
+        return true;
+      } 
+    }
+
+    return false;
   };
 
 
+  
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
+    
+    // if iterator not present, iterator becomes basic truthy/falsy test
+    if (!iterator) {
+      iterator = function(item) {
+        if (item) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+    // if collection is an array object
+    if (Array.isArray(collection)) {
+      for (var i = 0; i < collection.length; i++) {
+        if (!iterator(collection[i])) {
+          return false;
+        }
+      }
+    }
+
+    // if collection is non-array object
+    for (var key in collection) {
+      if (!iterator(collection[key])) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
+        // if iterator not present, iterator becomes basic truthy/falsy test
+    if (!iterator) {
+      iterator = function(item) {
+        if (item) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+
+    if (Array.isArray(collection)) {
+      for (var i = 0; i < collection.length; i++) {
+        if (iterator(collection[i])) {
+          return true;
+        }
+      }
+    }
+
+    for (var key in collection) {
+      if (iterator(collection[key])) {
+        return true;
+      }
+    }
+
+    return false;
+
+
   };
 
 
@@ -187,12 +258,41 @@ var _ = { };
 
   // Extend a given object with all the properties of the passed in
   // object(s).
+
+  // **Initial code missing second parameter, that of the passed in object to merge with the main object
+  // **Added parameter for second obj
+
+  // Returns updated object
+
+  // function sortArgs() {
+  //   var args = Array.prototype.slice.call(arguments);
+  //   return args.sort();
+  // }
+
   _.extend = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        obj[key] = arguments[i][key];
+      }
+    }
+
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        // if object does not already have key
+        if (!obj.hasOwnProperty(key)) {
+          obj[key] = arguments[i][key];
+        }
+      }
+    }
+
+    return obj;
   };
 
 
