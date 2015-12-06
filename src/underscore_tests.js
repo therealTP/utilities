@@ -304,6 +304,14 @@ var _ = { };
   // Return a function that can be called at most one time. Subsequent calls
   // should return the previously returned value.
   _.once = function(func) {
+
+    if (!func.called) {
+      func.called = true;
+      func.val = func();
+      return func;
+    } else {
+      return func.val;
+    }
   };
 
   // Memoize an expensive function by storing its results. You may assume
@@ -313,6 +321,14 @@ var _ = { };
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    
+    func.cache = {};
+    if (func.arguments[0] in func.cache) {
+      return func.cache[func.arguments[0]];
+    } else {
+      func.cache[func]
+    }
+
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -322,19 +338,69 @@ var _ = { };
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    
+    var args = Array.prototype.slice.call(arguments, 2); // gets arguements parameter (third)
+    
+    return setTimeout(function() { // returns the function invocation after x ms
+      return func.apply(null, args); // returns the function invoked with 
+    }, wait);
   };
 
 
 
   // Shuffle an array.
   _.shuffle = function(array) {
+
+    var newArr = [];
+
+    while (array.length > 0) {
+      var rand = Math.floor((Math.random() * array.length));
+      newArr.push(array.splice(rand, 1)[0]);
+    };
+
+    return newArr;
+
   };
 
   // Sort the object's values by a criterion produced by an iterator.
   // If iterator is a string, sort objects by that property with the name
   // of that string. For example, _.sortBy(people, 'name') should sort
   // an array of people by their name.
+
+  // collection: either array of values or array of objects
+  // iterator: function or string
+  // undefined values at end
+  
   _.sortBy = function(collection, iterator) {
+
+    var compareFunc;
+
+    if (typeof iterator === 'string') {
+      compareFunc = function(a, b) {
+        if (a[iterator] < b[iterator]) {
+          return -1;
+        } else if (a[iterator] > b[iterator]) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    } else if (typeof iterator === 'function') {
+      compareFunc = function(a, b) {
+        if (iterator(a) < iterator(b)) {
+          return -1;
+        } else if (iterator(a) > iterator(b)) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    }
+    
+    collection.sort(compareFunc);
+
+    return collection;
+
   };
 
   // Zip together two or more arrays with elements of the same index
@@ -343,21 +409,141 @@ var _ = { };
   // Example:
   // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
   _.zip = function() {
+    // for each 
+    var zippedArray = [];
+    var subArr = 0;
+
+    // find total # of subArr needed
+    for (var i = 0; i < arguments.length; i++) {
+      var currLen = arguments[i].length;
+      if (currLen > subArr) {
+        subArr = currLen;
+      }
+    }
+
+    // push correct number of empty arrays to zippedArray
+    for (var j = 0; j < subArr; j++) {
+      zippedArray.push([]);
+      // after pushing an empty array, find the correct elements of each argument to push to each newly created subArr
+      for (var k = 0; k < arguments.length; k++) {
+        zippedArray[j].push(arguments[k][j]);
+      }
+    }
+
+    return zippedArray;
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
   // The new array should contain all elements of the multidimensional array.
   _.flatten = function(nestedArray, result) {
-  };
+    /*
+    // recursion, but how!
+    
+    // // establish base case
+    var allNums; // boolean: are all values in this array level numbers?
+    
+    for (var i = 0; i < nestedArray.length; i++) {
+      if (typeof nestedArray[i] !== "number") {
+        allNums = false;
+        break;
+      } else {
+        allNums = true;
+      }
+    }
+
+    // // base case: if all items in array are numbers, return the array!
+    if (allNums) {
+      return nestedArray;
+    } else {
+      for (var j = 0; j < nestedArray.length; j++) {
+        if (typeof nestedArray[j] === "number") {
+
+        }
+      }
+    }
+
+    // recursive case
+    // ensure that the arguments you use for the recursion will lead to your base case.
+    // does the recursive case modify my arguments in such a way that each recursion brings it one step closer to the base case?
+
+    return output;
+    */
+  }
+
+  // if all values in array are numbers, push them all to output
+  // return 
+  /*
+  
+  [1, [2], [3, [[[4]]]]]
+
+  [1, [2], [3, [[4]]]]
+
+  [1, [2], [3, [4]]]
+
+  [1, [2], [3, 4]]
+
+  [1, [2], 3, 4]
+
+  [1, 2, 3, 4]
+  */
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+
+    // create obj to track count of each item
+    var countItems = {};
+    
+    // for each array passed in as an argument:
+    for (var i = 0; i < arguments.length; i++) {
+      var argArray = arguments[i];
+      
+      // loop through each item in the array
+      for (var j = 0; j < argArray.length; j++) {
+        var currItem = argArray[j];
+        
+        // if that item already exists in countItems, increase its count by 1
+        if (countItems[currItem]) {
+          countItems[currItem]++;
+        } else { // else, create the item prop and set it equal to one (first instance of item)
+          countItems[currItem] = 1;
+        }
+      }
+    }
+
+    // create empty array to hold shared items
+    var sharedItems = [];
+
+    // for each item/count in countItems
+    for (var itemProp in countItems) {
+      // if the count of the item is equal to the total # args (i.e. all args had item)
+      if (countItems[itemProp] === arguments.length) {
+        // add that item to sharedItems array
+        sharedItems.push(itemProp);
+      }
+    }
+
+    return sharedItems;
   };
+
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    
+    for (var i = 1; i < arguments.length; i++) {
+      var currArray = arguments[i];
+
+      for (var j = 0; j < currArray.length; j++) {
+        var item = currArray[j];
+        var itemIndex = array.indexOf(item);
+        if (itemIndex > -1) {
+          array.splice(itemIndex, 1);
+        }
+      }
+    }
+
+    return array;
   };
 
 }).call(this);
