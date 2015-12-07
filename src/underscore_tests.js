@@ -305,12 +305,16 @@ var _ = { };
   // should return the previously returned value.
   _.once = function(func) {
 
-    if (!func.called) {
-      func.called = true;
-      func.val = func();
-      return func;
-    } else {
-      return func.val;
+    var hasCalled = false;
+    var funcValue; 
+
+    return function() {
+      if (!hasCalled) {
+        hasCalled = true;
+        funcValue = func.apply(this, arguments);
+      }
+
+      return funcValue;
     }
   };
 
@@ -322,13 +326,25 @@ var _ = { };
   // instead if possible.
   _.memoize = function(func) {
     
-    func.cache = {};
-    if (func.arguments[0] in func.cache) {
-      return func.cache[func.arguments[0]];
-    } else {
-      func.cache[func]
-    }
+    var cache = {};
 
+    // function to create key for function, based on its arguments. Returns the argument passed as key.
+    var funcVal = function(value) {return value;}
+    
+    return function () {
+
+      // get key for function passed in as argument (inc. its arguments)
+      var key = funcVal.apply(this, arguments);
+
+      if (key in cache) {
+        return cache[key];
+      } else {
+        // add value in the cache 
+        var val = func.apply(this, arguments);
+        cache[key] = val;
+        return val;
+      }  
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -436,10 +452,11 @@ var _ = { };
   // Takes a multidimensional array and converts it to a one-dimensional array.
   // The new array should contain all elements of the multidimensional array.
   _.flatten = function(nestedArray, result) {
-    /*
-    // recursion, but how!
     
+    // recursion, but how!
+    // Example: [1, [2, 3]]
     // // establish base case
+    var numArr = [];
     var allNums; // boolean: are all values in this array level numbers?
     
     for (var i = 0; i < nestedArray.length; i++) {
@@ -451,24 +468,28 @@ var _ = { };
       }
     }
 
-    // // base case: if all items in array are numbers, return the array!
+    // // base case: if all items in array are numbers, add all nums to main array and return it
     if (allNums) {
-      return nestedArray;
+      Array.prototype.push.apply(numArr, nestedArray);
+      return numArr;
     } else {
+      // if not, go through each item in array, flatten it, add to level array, and return level array
+      var levelArr = [];
       for (var j = 0; j < nestedArray.length; j++) {
-        if (typeof nestedArray[j] === "number") {
-
+        var item = nestedArray[j];
+        if (typeof item === "number") { // if item is number, add to level array
+          levelArr.push(item);
+        } else {
+          Array.prototype.push.apply(levelArr, this.flatten(nestedArray[j])); // if item is array, flatten it and add values to level array
         }
       }
+      return levelArr; // return the flattened level array
     }
+  };
 
     // recursive case
     // ensure that the arguments you use for the recursion will lead to your base case.
     // does the recursive case modify my arguments in such a way that each recursion brings it one step closer to the base case?
-
-    return output;
-    */
-  }
 
   // if all values in array are numbers, push them all to output
   // return 
